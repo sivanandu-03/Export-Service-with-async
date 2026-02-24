@@ -9,10 +9,7 @@ async function runExport(pool, jobId, filters, options) {
     const filePath = `${process.env.EXPORT_STORAGE_PATH}/export_${jobId}.csv`;
     
     try {
-        // Update to processing
         await pool.query('UPDATE export_jobs SET status = $1 WHERE id = $2', ['processing', jobId]);
-
-        // Build dynamic query
         let queryText = `SELECT ${options.columns || '*'} FROM users WHERE 1=1`;
         const params = [];
         if (filters.country_code) { params.push(filters.country_code); queryText += ` AND country_code = $${params.length}`; }
@@ -25,18 +22,16 @@ async function runExport(pool, jobId, filters, options) {
         const csvTransformer = new Transform({
             writableObjectMode: true,
             transform(row, encoding, callback) {
-                // Header row
                 if (count === 0) {
                     this.push(Object.keys(row).join(options.delimiter) + '\n');
                 }
-                // Data row
                 const line = Object.values(row)
                     .map(v => `${options.quoteChar}${v}${options.quoteChar}`)
                     .join(options.delimiter);
                 this.push(line + '\n');
                 
                 count++;
-                if (count % 10000 === 0) { // Notify status every 10k rows
+                if (count % 10000 === 0) { 
                     pool.query('UPDATE export_jobs SET processed_rows = $1 WHERE id = $2', [count, jobId]);
                 }
                 callback();
