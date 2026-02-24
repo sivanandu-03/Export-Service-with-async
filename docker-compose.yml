@@ -11,7 +11,7 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - ./seeds:/docker-entrypoint-initdb.d  # Automatically runs init.sql
+      - ./seeds:/docker-entrypoint-initdb.d  
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U exporter -d exports_db"]
@@ -33,7 +33,6 @@ services:
       - DB_NAME=exports_db
       - DATABASE_URL=postgresql://exporter:secret@db:5432/exports_db
       - EXPORT_STORAGE_PATH=/app/exports
-    # MANDATORY: Enforce the 150MB limit
     deploy:
       resources:
         limits:
